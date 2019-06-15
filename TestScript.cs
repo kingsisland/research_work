@@ -5,6 +5,11 @@ using Wrld.Resources.Buildings;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using System.Windows;
+using CustomBuilding;
 
 public class TestScript : MonoBehaviour
 {
@@ -12,42 +17,60 @@ public class TestScript : MonoBehaviour
     
     public GameObject sphere;
 
-    public float partsXZ = 5f;
-    public float partsInY = 5f;
+    public float partsXZ ;
+    public float partsInY ;
     private float x, y, z;
     public bool allSet ;
-    private  HashSet<Vector3> BuildingsList = new HashSet<Vector3>();
-    public float ConeAngle = 60f;
-    public float ConeSpread = 90f;
-    public float RayDurationTime = 10f;
 
- 
+    
+    public float ConeAngle ;
+    public float ConeSpread ;
 
-    void Start()
+    public float RayDurationTime;
+
+    private HashSet<Vector3> BuildingsList;
+    private HashSet<StoreBuildingData> Buildings;
+    private  Camera cam;
+
+
+
+    private void OnEnable()
     {
-        allSet = false;
-        
+        var cameraLocation = LatLong.FromDegrees(36.0918, -115.1739);
+        Api.Instance.CameraApi.MoveTo(cameraLocation, distanceFromInterest: 400, headingDegrees: 0, tiltDegrees: 45 );
     }
 
+    private void Awake()
+    {
+        allSet = false;
+        BuildingsList = new HashSet<Vector3>();
+        Buildings = new HashSet<StoreBuildingData>();
+        cam = GetComponent<Camera>();
+    }
+  
 
      void Update()
     {   
         if(allSet == true)
         {
-            JuiceUp();
-            allSet = false;
-        }
+            
 
+            JuiceUp();
+             allSet = false;
+        }
+        
     }
+
+
+ 
+
+
 
     private void JuiceUp()
     {
         
         float incrementTheta = ConeSpread / partsXZ;
         float incrementGamma = (90f - ConeAngle ) / partsInY;
-
-       /* Debug.Log(incrementTheta);
-        Debug.Log(incrementGamma);*/
 
         float r = 1f;
         float ThetaInDegrees = 0f;
@@ -56,17 +79,8 @@ public class TestScript : MonoBehaviour
            
             float GammaInDegrees = 90f;
 
-             Debug.Log("Theta: " + ThetaInDegrees);
-            
-
-           for (; GammaInDegrees >= ConeAngle; GammaInDegrees -= incrementTheta )
+            for (; GammaInDegrees >= ConeAngle; GammaInDegrees -= incrementGamma )
             {
-               
-
-
-                /*Debug.Log("Gamma : " + GammaInDegrees);
-                Debug.Log("ConeAngle : " + ConeAngle);*/
-
                 x = r * Mathf.Sin(GammaInDegrees * Mathf.Deg2Rad) * Mathf.Cos(ThetaInDegrees * Mathf.Deg2Rad);
                 y = r * Mathf.Cos( GammaInDegrees * Mathf.Deg2Rad);
                 z = r * Mathf.Sin(GammaInDegrees * Mathf.Deg2Rad) * Mathf.Sin(ThetaInDegrees * Mathf.Deg2Rad);
@@ -79,16 +93,12 @@ public class TestScript : MonoBehaviour
                 
             }
 
-            
-
         }
 
-        foreach (var item in BuildingsList)
+        /*foreach (var item in BuildingsList)
         {
-            Debug.Log(item.x + "  " + item.y + "  " + item.z);
-        }
-
-        
+            Debug.Log(item);
+        }*/
     }
 
     private void FireSomeRays(float x, float y, float z)    
@@ -107,11 +117,16 @@ public class TestScript : MonoBehaviour
 
     }
 
+   
 
     private void AddBuildingToList( RaycastHit hit)    //Get the hit information and adds it to a HashSet
     {
          BuildingsList.Add(hit.point);
     }
+
+
+
+    
     
 
 }
