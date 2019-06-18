@@ -1,16 +1,13 @@
-﻿using System.Collections;
+﻿
 using Wrld;
 using Wrld.Space;
-using Wrld.Resources.Buildings;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using System.Windows;
 using CustomBuilding;
-
+using System.Collections.Concurrent;
+using CustomBuilding.Procesing;
 public class TestScript : MonoBehaviour
 {
     public float radius;
@@ -30,14 +27,14 @@ public class TestScript : MonoBehaviour
 
     private HashSet<Vector3> BuildingsList;
     private HashSet<StoreBuildingData> Buildings;
-    private  Camera cam;
+    public  Camera cam;
 
-
+    private ConcurrentDictionary<LatLong, int> BuildingStats;
 
     private void OnEnable()
     {
-        var cameraLocation = LatLong.FromDegrees(36.0918, -115.1739);
-        Api.Instance.CameraApi.MoveTo(cameraLocation, distanceFromInterest: 400, headingDegrees: 0, tiltDegrees: 45 );
+       /* var cameraLocation = LatLong.FromDegrees(36.0918, -115.1739);
+        Api.Instance.CameraApi.MoveTo(cameraLocation, distanceFromInterest: 400, headingDegrees: 0, tiltDegrees: 45 );*/
     }
 
     private void Awake()
@@ -45,17 +42,16 @@ public class TestScript : MonoBehaviour
         allSet = false;
         BuildingsList = new HashSet<Vector3>();
         Buildings = new HashSet<StoreBuildingData>();
-        cam = GetComponent<Camera>();
+       // BuildingStats = new ConcurrentDictionary<LatLong, int>();
+       // cam = GetComponent<Camera>();
     }
   
 
-     void Update()
+      void Update()
     {   
         if(allSet == true)
         {
-            
-
-            JuiceUp();
+             JuiceUp();
              allSet = false;
         }
         
@@ -66,7 +62,7 @@ public class TestScript : MonoBehaviour
 
 
 
-    private void JuiceUp()
+    private /* async*/ void JuiceUp()
     {
         
         float incrementTheta = ConeSpread / partsXZ;
@@ -95,10 +91,48 @@ public class TestScript : MonoBehaviour
 
         }
 
+        GetBuildingInformationAndUpdateHits getBuildingInfo= new GetBuildingInformationAndUpdateHits();
+        try
+        {
+             /*await*/ getBuildingInfo.Process(BuildingsList, cam);
+
+            var cameraLocation = LatLong.FromDegrees(36.0918, -115.1739);
+            //Api.Instance.CameraApi.MoveTo(cameraLocation, distanceFromInterest: 1000, headingDegrees: 0, tiltDegrees: 45);
+        }
+        catch(AccessViolationException e)
+        {
+            Debug.Log("Exception caught at :  getBuildingInfo.Process(BuildingsList, cam) :           " + e);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Debug.Log("Exception caught at :  getBuildingInfo.Process(BuildingsList, cam) :           " + e);
+        }
+
+        try
+        {
+           BuildingStats = getBuildingInfo.GetStats();
+
+
+            foreach (var item in BuildingStats)
+            {
+                Debug.Log(item);
+
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log("Exception caught at :  BuildingStats = getBuildingInfo.GetStats(); :           " + e);
+        }
+
+
+
         /*foreach (var item in BuildingsList)
         {
             Debug.Log(item);
         }*/
+
+
+
     }
 
     private void FireSomeRays(float x, float y, float z)    

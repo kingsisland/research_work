@@ -8,69 +8,134 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Windows;
 using CustomBuilding;
-
+using System.Collections.Concurrent;
 
 //Will  get the async part t work as intended  
 
 namespace CustomBuilding.Procesing
 {
-    public  class GetBuildingInformationAndUpdateHits
+    public class GetBuildingInformationAndUpdateHits
     {
-        private HashSet<StoreBuildingData> Buildings;
-
-        private async Task< HashSet<StoreBuildingData>> Process (HashSet<Vector3> BuildingsList, Camera cam)  // attach an await statement
-        {   
-            foreach (var Point in BuildingsList)
-            {
-                Vector3 screenPos = cam.WorldToScreenPoint(Point);
-                Vector2 BuildingLocation = new Vector2(screenPos.x, screenPos.y);
-
-               
 
 
+        private ConcurrentDictionary<LatLong, int> BuildingStats; 
+      //  private bool IsLocked;
 
-            }
-            // return
+        public GetBuildingInformationAndUpdateHits()
+        {
+            BuildingStats = new ConcurrentDictionary<LatLong, int>();
+        
         }
 
-        private void QueryApi (Vector2 Location)
+        public /*async Task*/ void  Process (HashSet<Vector3> BuildingsList, Camera cam )  // attach an await statement
+        {
+         
+           // List<Task> tasks = new List<Task> ();
+            foreach (var Point in BuildingsList)
+            {
+                   Vector3 screenPos = cam.WorldToScreenPoint(Point);
+                   // Vector2 BuildingLocation = new Vector2(screenPos.x, screenPos.y);
+                    //tasks.Add(QueryApi(BuildingLocation));
+
+               
+                    QueryApi(screenPos);
+                
+              
+            }
+
+             // await Task.WhenAll(tasks);
+          
+
+            Debug.Log("Api calls finished sucesfully");
+          
+            
+            
+        }
+
+        private /*async Task*/ void QueryApi (Vector3 Location)
         {
             var ray = Api.Instance.SpacesApi.ScreenPointToRay(Location);
 
-            LatLongAltitude intersectionPoint;
 
-            var didIntersectBuilding = Api.Instance.BuildingsApi.TryFindIntersectionWithBuilding(ray, out intersectionPoint);
+            var didIntersectBuilding = Api.Instance.BuildingsApi.TryFindIntersectionWithBuilding(ray, out LatLongAltitude intersectionPoint);
 
-            if(didIntersectBuilding)
+            if (didIntersectBuilding)
             {
-                BuildingHighlight.Create(
-                    new BuildingHighlightOptions()
-                    .HighlightBuildingAtScreenPoint(Location)
-                    .InformationOnly()
-                    .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
-                    );
+                
+                Debug.Log("didIntersectBuilding at: " + intersectionPoint);
+                
+                    /* await Task.Run(() => BuildingHighlight.Create(
+                   new BuildingHighlightOptions()
+                   .HighlightBuildingAtScreenPoint(Location)
+                   .InformationOnly()
+                   .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
+                   ));*/
+
+                    Debug.Log(intersectionPoint.GetLatitude() + "       " + intersectionPoint.GetLongitude());
+                    var intersectionPointLatLong = intersectionPoint.GetLatLong();
+
+
+                   BuildingHighlight highlight =  BuildingHighlight.Create(
+                  new BuildingHighlightOptions()
+                  .HighlightBuildingAtScreenPoint(Location)
+                  .Color(new Color(1, 1, 0, 0.5f))
+                  /*.InformationOnly()*/
+                  .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
+                  );
+                   
+
+                    
+
+                
+             
+
             }
         }
 
         void OnBuildingInformationReceived(BuildingHighlight highlight)
-        {
+        {   
+
             if(highlight.IsDiscarded())
             {
                 Debug.Log(string.Format("No building information was received"));
                 return;
             }
 
-            var BuildingInformation = highlight.GetBuildingInformation();
 
-            StoreBuildingData data = new StoreBuildingData();
 
-            data.BuildingId = BuildingInformation.BuildingId;
-            data.BuildingLocation = BuildingInformation.BuildingDimensions.Centroid;
+            Debug.Log("OnBuildingInformationReceived");
 
-            //  // use an arrayList to contain the objects of hit information & LAtlong location of a building
+           /*   
+                var buildingInformation = highlight.GetBuildingInformation();
+                Debug.Log(highlight.HasPopulatedBuildingInformation());
 
+                StoreBuildingData data = new StoreBuildingData();
+
+                data.BuildingId = buildingInformation.BuildingId;
+                    data.BuildingLocation = buildingInformation.BuildingDimensions.Centroid;
+                
+                
+                    Debug.Log(data.BuildingId +  "      " + data.BuildingLocation);
+                
+
+                BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
+
+                highlight.Discard();
+
+            
+          
+*/
+
+
+
+
+        }
+
+        public ConcurrentDictionary<LatLong, int> GetStats ()
+        {
+             return BuildingStats;
+            
 
         }
 
