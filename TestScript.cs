@@ -8,6 +8,7 @@ using System.Windows;
 using CustomBuilding;
 using System.Collections.Concurrent;
 using CustomBuilding.Procesing;
+using System.Collections;
 public class TestScript : MonoBehaviour
 {
     public float radius;
@@ -51,7 +52,8 @@ public class TestScript : MonoBehaviour
     {   
         if(allSet == true)
         {
-             JuiceUp();
+            // JuiceUp();
+            StartCoroutine(JuiceUp());
              allSet = false;
         }
         
@@ -62,7 +64,7 @@ public class TestScript : MonoBehaviour
 
 
 
-    private /* async*/ void JuiceUp()
+    private /* async*/ IEnumerator JuiceUp()
     {
         
         float incrementTheta = ConeSpread / partsXZ;
@@ -92,37 +94,31 @@ public class TestScript : MonoBehaviour
         }
 
         GetBuildingInformationAndUpdateHits getBuildingInfo= new GetBuildingInformationAndUpdateHits();
-        try
-        {
+       
              /*await*/ getBuildingInfo.Process(BuildingsList, cam);
 
-            var cameraLocation = LatLong.FromDegrees(36.0918, -115.1739);
-            //Api.Instance.CameraApi.MoveTo(cameraLocation, distanceFromInterest: 1000, headingDegrees: 0, tiltDegrees: 45);
-        }
-        catch(AccessViolationException e)
-        {
-            Debug.Log("Exception caught at :  getBuildingInfo.Process(BuildingsList, cam) :           " + e);
-        }
-        catch (UnauthorizedAccessException e)
-        {
-            Debug.Log("Exception caught at :  getBuildingInfo.Process(BuildingsList, cam) :           " + e);
-        }
 
-        try
-        {
-           BuildingStats = getBuildingInfo.GetStats();
+        //Waiting for five seconds
+
+        Debug.Log("Time coroutine starts: " + System.DateTime.Now);
+        yield return new WaitForSeconds(5);
+        Debug.Log("Time coroutine ends: " + System.DateTime.Now);
 
 
-            foreach (var item in BuildingStats)
-            {
-                Debug.Log(item);
 
-            }
-        }
-        catch (Exception e)
+
+        BuildingStats = getBuildingInfo.GetStats();
+
+        Debug.Log("Got BuildingStats: in main " + BuildingStats.Count);
+
+
+        foreach (var item in BuildingStats)
         {
-            Debug.Log("Exception caught at :  BuildingStats = getBuildingInfo.GetStats(); :           " + e);
+            Debug.Log(item.Key);
+
         }
+
+
 
 
 
@@ -159,7 +155,12 @@ public class TestScript : MonoBehaviour
     }
 
 
-
+   /* IEnumerator WaitForAPI()
+    {
+        Debug.Log("Time coroutine starts: " + System.DateTime.Now);
+         yield return new WaitForSeconds(5);
+        Debug.Log("Time coroutine ends: " + System.DateTime.Now);
+    }*/
     
     
 

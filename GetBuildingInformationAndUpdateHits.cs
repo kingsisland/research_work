@@ -47,10 +47,16 @@ namespace CustomBuilding.Procesing
              // await Task.WhenAll(tasks);
           
 
-            Debug.Log("Api calls finished sucesfully");
-          
-            
-            
+           /* Debug.Log("Api calls finished sucesfully");
+            Debug.Log("In Process func: " + System.DateTime.Now);*/
+
+           /* foreach (var item in BuildingStats)
+            {
+                Debug.Log(item.Key);
+
+            }*/
+
+
         }
 
         private /*async Task*/ void QueryApi (Vector3 Location)
@@ -63,7 +69,7 @@ namespace CustomBuilding.Procesing
             if (didIntersectBuilding)
             {
                 
-                Debug.Log("didIntersectBuilding at: " + intersectionPoint);
+              //  Debug.Log("didIntersectBuilding at: " + intersectionPoint);
                 
                     /* await Task.Run(() => BuildingHighlight.Create(
                    new BuildingHighlightOptions()
@@ -72,7 +78,7 @@ namespace CustomBuilding.Procesing
                    .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
                    ));*/
 
-                    Debug.Log(intersectionPoint.GetLatitude() + "       " + intersectionPoint.GetLongitude());
+                //    Debug.Log(intersectionPoint.GetLatitude() + "       " + intersectionPoint.GetLongitude());
                     var intersectionPointLatLong = intersectionPoint.GetLatLong();
 
 
@@ -104,31 +110,31 @@ namespace CustomBuilding.Procesing
 
 
 
-            Debug.Log("OnBuildingInformationReceived");
-
-           /*   
-                var buildingInformation = highlight.GetBuildingInformation();
-                Debug.Log(highlight.HasPopulatedBuildingInformation());
-
-                StoreBuildingData data = new StoreBuildingData();
-
-                data.BuildingId = buildingInformation.BuildingId;
-                    data.BuildingLocation = buildingInformation.BuildingDimensions.Centroid;
-                
-                
-                    Debug.Log(data.BuildingId +  "      " + data.BuildingLocation);
-                
-
-                BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
-
-                highlight.Discard();
-
-            
-          
-*/
+            //Debug.Log("OnBuildingInformationReceived");
 
 
+            var buildingInformation = highlight.GetBuildingInformation();
+            // Debug.Log(highlight.HasPopulatedBuildingInformation());
 
+            //  Debug.Log("In Delegate: " + System.DateTime.Now);
+
+
+            StoreBuildingData data = new StoreBuildingData();
+
+            data.BuildingId = buildingInformation.BuildingId;
+            data.BuildingLocation = buildingInformation.BuildingDimensions.Centroid;
+
+            BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
+
+          /*  Debug.Log("Got BuildingStats: " + BuildingStats.Count);
+            Debug.Log("Is empty: " + BuildingStats.IsEmpty);*/
+
+            /*    Debug.Log(BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1) + "      " + (data.BuildingLocation.GetLatitude()).ToString()
+                           + "     " + (data.BuildingLocation.GetLongitudeInRadians()).ToString());*/
+
+
+
+            //highlight.Discard();
 
         }
 
