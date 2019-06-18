@@ -15,16 +15,19 @@ using System.Collections.Concurrent;
 
 namespace CustomBuilding.Procesing
 {
-    public class GetBuildingInformationAndUpdateHits
+    public class GetBuildingInformationAndUpdateHits: MonoBehaviour
     {
 
 
-        private ConcurrentDictionary<LatLong, int> BuildingStats; 
+        private ConcurrentDictionary<LatLong, int> BuildingStats;
+
+        public float HighlightOnScreenTime;
       //  private bool IsLocked;
 
         public GetBuildingInformationAndUpdateHits()
         {
             BuildingStats = new ConcurrentDictionary<LatLong, int>();
+            HighlightOnScreenTime = 5f;
         
         }
 
@@ -100,9 +103,9 @@ namespace CustomBuilding.Procesing
         }
 
         void OnBuildingInformationReceived(BuildingHighlight highlight)
-        {   
+        {
 
-            if(highlight.IsDiscarded())
+            if (highlight.IsDiscarded())
             {
                 Debug.Log(string.Format("No building information was received"));
                 return;
@@ -114,9 +117,7 @@ namespace CustomBuilding.Procesing
 
 
             var buildingInformation = highlight.GetBuildingInformation();
-            // Debug.Log(highlight.HasPopulatedBuildingInformation());
-
-            //  Debug.Log("In Delegate: " + System.DateTime.Now);
+       
 
 
             StoreBuildingData data = new StoreBuildingData();
@@ -126,15 +127,10 @@ namespace CustomBuilding.Procesing
 
             BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
 
-          /*  Debug.Log("Got BuildingStats: " + BuildingStats.Count);
-            Debug.Log("Is empty: " + BuildingStats.IsEmpty);*/
-
-            /*    Debug.Log(BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1) + "      " + (data.BuildingLocation.GetLatitude()).ToString()
-                           + "     " + (data.BuildingLocation.GetLongitudeInRadians()).ToString());*/
+            StartCoroutine(ClearHighlight(highlight));
 
 
-
-            //highlight.Discard();
+            
 
         }
 
@@ -145,6 +141,15 @@ namespace CustomBuilding.Procesing
 
         }
 
+
+        IEnumerator ClearHighlight(BuildingHighlight highlight)
+        {
+          
+            yield return new WaitForSeconds(HighlightOnScreenTime);
+
+            Debug.Log("ClearHighlighs: ");
+            highlight.Discard();
+        }
 
 
     }

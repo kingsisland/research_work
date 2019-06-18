@@ -93,15 +93,16 @@ public class TestScript : MonoBehaviour
 
         }
 
-        GetBuildingInformationAndUpdateHits getBuildingInfo= new GetBuildingInformationAndUpdateHits();
+        // GetBuildingInformationAndUpdateHits getBuildingInfo= new GetBuildingInformationAndUpdateHits();
+        GetBuildingInformationAndUpdateHits getBuildingInfo = GetComponent<GetBuildingInformationAndUpdateHits>();
        
              /*await*/ getBuildingInfo.Process(BuildingsList, cam);
 
 
-        //Waiting for five seconds
+        //Waiting for five seconds for the API to finish Loading its stuff
 
         Debug.Log("Time coroutine starts: " + System.DateTime.Now);
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(15);               //make this a variable for now
         Debug.Log("Time coroutine ends: " + System.DateTime.Now);
 
 
@@ -109,25 +110,12 @@ public class TestScript : MonoBehaviour
 
         BuildingStats = getBuildingInfo.GetStats();
 
-        Debug.Log("Got BuildingStats: in main " + BuildingStats.Count);
+        var VisualizationScript = GetComponent<Visualization>();
+        VisualizationScript.FindOptimalBuildings(BuildingStats);
 
+        
 
-        foreach (var item in BuildingStats)
-        {
-            Debug.Log(item.Key);
-
-        }
-
-
-
-
-
-        /*foreach (var item in BuildingsList)
-        {
-            Debug.Log(item);
-        }*/
-
-
+       
 
     }
 
@@ -138,7 +126,7 @@ public class TestScript : MonoBehaviour
         if (Physics.Raycast(sphere.transform.position,new Vector3(x, y, z), out hit, radius))
         {
             
-            Debug.DrawRay(sphere.transform.position, -sphere.transform.position + hit.point, Color.yellow, 60f);
+            Debug.DrawRay(sphere.transform.position, -sphere.transform.position + hit.point, Color.yellow,60f);  
             AddBuildingToList(hit);
         }
        else
