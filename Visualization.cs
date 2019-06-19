@@ -18,7 +18,7 @@ public class Visualization : MonoBehaviour
         //freeing some memory
         BuildingsArray = null;
 
-        BuildingsList.Sort((x, y) => (y.Value).CompareTo(x.Value));
+        BuildingsList.Sort((x, y) => (y.Value).CompareTo(x.Value));      //Sorting the buildings on frequency basis
 
         foreach (var item in BuildingsList)
         {
@@ -27,8 +27,8 @@ public class Visualization : MonoBehaviour
 
     }
 
-    public List<KeyValuePair<LatLong, int> GetSortedList ()
-        {
-            return BuildingsList;
-        }
+     public List<KeyValuePair<LatLong, int>> GetSortedList ()
+     {
+          return BuildingsList;
+     }
 }
