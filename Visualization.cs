@@ -7,21 +7,28 @@ using System.Collections.Concurrent;
 
 public class Visualization : MonoBehaviour
 {
-   public void FindOptimalBuildings(ConcurrentDictionary<LatLong, int> BuildingStats)
+    private List<KeyValuePair<LatLong, int>> BuildingsList = null;
+
+   
+    public void FindOptimalBuildings(ConcurrentDictionary<LatLong, int> BuildingStats)
     {
         var BuildingsArray = BuildingStats.ToArray();
-        var BuildingsList = new List<KeyValuePair<LatLong, int>>(BuildingsArray);
+        BuildingsList = new List<KeyValuePair<LatLong, int>>(BuildingsArray);
 
         //freeing some memory
         BuildingsArray = null;
 
         BuildingsList.Sort((x, y) => (y.Value).CompareTo(x.Value));
 
-        foreach(var item in BuildingsList)
+        foreach (var item in BuildingsList)
         {
             Debug.Log((item.Key.GetLatitude()).ToString() + "   " + (item.Key.GetLongitude()).ToString() + "      " + item.Value);
         }
 
-
     }
+
+    public List<KeyValuePair<LatLong, int> GetSortedList ()
+        {
+            return BuildingsList;
+        }
 }
