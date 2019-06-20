@@ -15,47 +15,45 @@ using System.Collections.Concurrent;
 
 namespace CustomBuilding.Procesing
 {
-    public class GetBuildingInformationAndUpdateHits: MonoBehaviour
+    public class GetBuildingInformationAndUpdateHits : MonoBehaviour
     {
 
 
-        private ConcurrentDictionary<LatLong, int> BuildingStats;    // A thread-safe dictionary to collect the building details
+        private ConcurrentDictionary<LatLong, int> BuildingStats;
 
-        public float HighlightOnScreenTime;    //defines the time for which the highlights stay on the game screen
-
-        private int TotalBuildingsFound;
-        private int TotalBuildingsInformationReceived;
-      //  private bool IsLocked;
+        public float HighlightOnScreenTime;
+        //  private bool IsLocked;
 
         public GetBuildingInformationAndUpdateHits()
         {
             BuildingStats = new ConcurrentDictionary<LatLong, int>();
             HighlightOnScreenTime = 5f;
-            TotalBuildingsFound = 0;
-            TotalBuildingsInformationReceived = 0;
 
-        
         }
 
-        public /*async Task*/ void  Process (HashSet<Vector3> BuildingsList, Camera cam )  // attach an await statement
+        public /*async Task*/ void Process(HashSet<Vector3> BuildingsList, Camera cam)  // attach an await statement
         {
-         
-           // List<Task> tasks = new List<Task> ();
+
+            // List<Task> tasks = new List<Task> ();
             foreach (var Point in BuildingsList)
             {
-                   Vector3 screenPos = cam.WorldToScreenPoint(Point);
-                  
-                    //tasks.Add(QueryApi(BuildingLocation));
+                Vector3 screenPos = cam.WorldToScreenPoint(Point);
 
-               
-                    QueryApi(screenPos);
-                
+                //tasks.Add(QueryApi(BuildingLocation));
+
+
+                QueryApi(screenPos);
+
+
             }
 
             // await Task.WhenAll(tasks);
+
+
+
         }
 
-        private /*async Task*/ void QueryApi (Vector3 Location)
+        private /*async Task*/ void QueryApi(Vector3 Location)
         {
             var ray = Api.Instance.SpacesApi.ScreenPointToRay(Location);
 
@@ -65,18 +63,32 @@ namespace CustomBuilding.Procesing
             if (didIntersectBuilding)
             {
 
-                TotalBuildingsFound += 1;    //Keeps count of buildings hit (not unique) 
+                //  Debug.Log("didIntersectBuilding at: " + intersectionPoint);
 
-                  //var intersectionPointLatLong = intersectionPoint.GetLatLong();
+                /* await Task.Run(() => BuildingHighlight.Create(
+               new BuildingHighlightOptions()
+               .HighlightBuildingAtScreenPoint(Location)
+               .InformationOnly()
+               .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
+               ));*/
 
 
-                   BuildingHighlight highlight =  BuildingHighlight.Create(
-                  new BuildingHighlightOptions()
-                  .HighlightBuildingAtScreenPoint(Location)
-                  .Color(new Color(1, 1, 0, 0.5f))
-                  /*.InformationOnly()*/
-                  .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
-                  );
+                var intersectionPointLatLong = intersectionPoint.GetLatLong();
+
+
+                BuildingHighlight highlight = BuildingHighlight.Create(
+               new BuildingHighlightOptions()
+               .HighlightBuildingAtScreenPoint(Location)
+               .Color(new Color(1, 1, 0, 0.5f))
+               /*.InformationOnly()*/
+               .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
+               );
+
+
+
+
+
+
 
             }
         }
@@ -91,52 +103,43 @@ namespace CustomBuilding.Procesing
             }
 
 
+
+
+
             var buildingInformation = highlight.GetBuildingInformation();
-       
-            if(highlight.HasPopulatedBuildingInformation())
-            {
-                Debug.Log("HasPopulatedBuildingInformation: " + highlight.HasPopulatedBuildingInformation());
-                TotalBuildingsInformationReceived += 1;   // //Keeps count of buildings whose info is received (not unique)
-                Debug.Log("TotalBuildingsInformationReceived: " + TotalBuildingsInformationReceived);
 
-            }
 
-         
 
-            BuildingStats.AddOrUpdate(buildingInformation.BuildingDimensions.Centroid , 1, (key, oldValue) => oldValue + 1);
+            StoreBuildingData data = new StoreBuildingData();
 
-            //StartCoroutine(ClearHighlight(highlight));
+            data.BuildingId = buildingInformation.BuildingId;
+            data.BuildingLocation = buildingInformation.BuildingDimensions.Centroid;
+
+            BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
+
+            // StartCoroutine(ClearHighlight(highlight));
+
+
+
 
         }
 
-        public ConcurrentDictionary<LatLong, int> GetStats ()
+        public ConcurrentDictionary<LatLong, int> GetStats()
         {
-             return BuildingStats;
-            
+            return BuildingStats;
+
 
         }
 
 
-        IEnumerator ClearHighlight(BuildingHighlight highlight)   //clears highlights
+        IEnumerator ClearHighlight(BuildingHighlight highlight)
         {
-          
+
             yield return new WaitForSeconds(HighlightOnScreenTime);
 
             Debug.Log("ClearHighlighs: ");
             highlight.Discard();
         }
-
-        /*public bool IsProcessingDone()
-        {
-            if (TotalBuildingsFound == TotalBuildingsInformationReceived)
-          
-                return true;
-            else
-            {
-                Debug.Log("TotalBuildingsFound: " + TotalBuildingsFound + "     TotalBuildingsInformationReceived: " + TotalBuildingsInformationReceived);
-            }
-                return false;
-        }*/
 
 
     }
