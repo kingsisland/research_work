@@ -11,23 +11,23 @@ using CustomBuilding.Procesing;
 using System.Collections;
 public class TestScript : MonoBehaviour
 {
-    public float radius;
+    public float radius;     //Potential Weapon Range radius
     
-    public GameObject sphere;
+    public GameObject sphere;  //  object that casts rays
 
-    public float partsXZ ;
-    public float partsInY ;
-    private float x, y, z;
-    public bool allSet ;
+    public float partsXZ ;    // no. of parts a single quadrant in XZ Plane is divided into
+    public float partsInY;     // no. of parts a single quadrant in YZ Plane is divided into
+    private float x, y, z;     // used for creating points
+    public bool allSet ;       // a simple switch
 
     
-    public float ConeAngle ;
-    public float ConeSpread ;
+    public float ConeAngle ;   // the angle the visual Cone makes with Y-axis
+    public float ConeSpread ;   // Lies between 0 and 90
 
-    public float RayDurationTime;
+    public float RayDurationTime;  
 
-    private HashSet<Vector3> BuildingsList;
-    private HashSet<StoreBuildingData> Buildings;
+    private HashSet<Vector3> BuildingsList;    //Stores UnityWorld points of buildings
+    //private HashSet<StoreBuildingData> Buildings;  
     public  Camera cam;
 
     private ConcurrentDictionary<LatLong, int> BuildingStats;
@@ -42,7 +42,9 @@ public class TestScript : MonoBehaviour
     {
         allSet = false;
         BuildingsList = new HashSet<Vector3>();
-        Buildings = new HashSet<StoreBuildingData>();
+        
+        
+        //Buildings = new HashSet<StoreBuildingData>();
        // BuildingStats = new ConcurrentDictionary<LatLong, int>();
        // cam = GetComponent<Camera>();
     }
@@ -52,7 +54,7 @@ public class TestScript : MonoBehaviour
     {   
         if(allSet == true)
         {
-            // JuiceUp();
+           //  JuiceUp();
             StartCoroutine(JuiceUp());
              allSet = false;
         }
@@ -64,7 +66,7 @@ public class TestScript : MonoBehaviour
 
 
 
-    private /* async*/ IEnumerator JuiceUp()
+    private /* async*/ IEnumerator  JuiceUp()      //Driver Coroutine
     {
         
         float incrementTheta = ConeSpread / partsXZ;
@@ -72,6 +74,8 @@ public class TestScript : MonoBehaviour
 
         float r = 1f;
         float ThetaInDegrees = 0f;
+
+        //generates the points (x,y,z) os a sphere in 3D space
         for( ; ThetaInDegrees <= ConeSpread; ThetaInDegrees += incrementTheta )
         {   
            
@@ -94,18 +98,18 @@ public class TestScript : MonoBehaviour
         }
 
         // GetBuildingInformationAndUpdateHits getBuildingInfo= new GetBuildingInformationAndUpdateHits();
+
+
         GetBuildingInformationAndUpdateHits getBuildingInfo = GetComponent<GetBuildingInformationAndUpdateHits>();
        
-             /*await*/ getBuildingInfo.Process(BuildingsList, cam);
+             /*await*/ getBuildingInfo.Process(BuildingsList, cam);        //starts processing hit information to call API
 
 
         //Waiting for five seconds for the API to finish Loading its stuff
 
         Debug.Log("Time coroutine starts: " + System.DateTime.Now);
-        yield return new WaitForSeconds(15);               //make this a variable for now
+        yield return new WaitForSeconds(20f);               //make this a variable for now
         Debug.Log("Time coroutine ends: " + System.DateTime.Now);
-
-
 
 
         BuildingStats = getBuildingInfo.GetStats();
@@ -114,9 +118,6 @@ public class TestScript : MonoBehaviour
         VisualizationScript.FindOptimalBuildings(BuildingStats);
 
         
-
-       
-
     }
 
     private void FireSomeRays(float x, float y, float z)    

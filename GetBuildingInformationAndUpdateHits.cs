@@ -19,15 +19,21 @@ namespace CustomBuilding.Procesing
     {
 
 
-        private ConcurrentDictionary<LatLong, int> BuildingStats;
+        private ConcurrentDictionary<LatLong, int> BuildingStats;    // A thread-safe dictionary to collect the building details
 
-        public float HighlightOnScreenTime;
+        public float HighlightOnScreenTime;    //defines the time for which the highlights stay on the game screen
+
+        private int TotalBuildingsFound;
+        private int TotalBuildingsInformationReceived;
       //  private bool IsLocked;
 
         public GetBuildingInformationAndUpdateHits()
         {
             BuildingStats = new ConcurrentDictionary<LatLong, int>();
             HighlightOnScreenTime = 5f;
+            TotalBuildingsFound = 0;
+            TotalBuildingsInformationReceived = 0;
+
         
         }
 
@@ -38,28 +44,15 @@ namespace CustomBuilding.Procesing
             foreach (var Point in BuildingsList)
             {
                    Vector3 screenPos = cam.WorldToScreenPoint(Point);
-                   // Vector2 BuildingLocation = new Vector2(screenPos.x, screenPos.y);
+                  
                     //tasks.Add(QueryApi(BuildingLocation));
 
                
                     QueryApi(screenPos);
                 
-              
             }
 
-             // await Task.WhenAll(tasks);
-          
-
-           /* Debug.Log("Api calls finished sucesfully");
-            Debug.Log("In Process func: " + System.DateTime.Now);*/
-
-           /* foreach (var item in BuildingStats)
-            {
-                Debug.Log(item.Key);
-
-            }*/
-
-
+            // await Task.WhenAll(tasks);
         }
 
         private /*async Task*/ void QueryApi (Vector3 Location)
@@ -71,18 +64,10 @@ namespace CustomBuilding.Procesing
 
             if (didIntersectBuilding)
             {
-                
-              //  Debug.Log("didIntersectBuilding at: " + intersectionPoint);
-                
-                    /* await Task.Run(() => BuildingHighlight.Create(
-                   new BuildingHighlightOptions()
-                   .HighlightBuildingAtScreenPoint(Location)
-                   .InformationOnly()
-                   .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
-                   ));*/
 
-                //    Debug.Log(intersectionPoint.GetLatitude() + "       " + intersectionPoint.GetLongitude());
-                    var intersectionPointLatLong = intersectionPoint.GetLatLong();
+                TotalBuildingsFound += 1;    //Keeps count of buildings hit (not unique) 
+
+                  //var intersectionPointLatLong = intersectionPoint.GetLatLong();
 
 
                    BuildingHighlight highlight =  BuildingHighlight.Create(
@@ -92,12 +77,6 @@ namespace CustomBuilding.Procesing
                   /*.InformationOnly()*/
                   .BuildingInformationReceivedHandler(this.OnBuildingInformationReceived)
                   );
-                   
-
-                    
-
-                
-             
 
             }
         }
@@ -112,25 +91,21 @@ namespace CustomBuilding.Procesing
             }
 
 
-
-            //Debug.Log("OnBuildingInformationReceived");
-
-
             var buildingInformation = highlight.GetBuildingInformation();
        
+            if(highlight.HasPopulatedBuildingInformation())
+            {
+                Debug.Log("HasPopulatedBuildingInformation: " + highlight.HasPopulatedBuildingInformation());
+                TotalBuildingsInformationReceived += 1;   // //Keeps count of buildings whose info is received (not unique)
+                Debug.Log("TotalBuildingsInformationReceived: " + TotalBuildingsInformationReceived);
 
+            }
 
-            StoreBuildingData data = new StoreBuildingData();
+         
 
-            data.BuildingId = buildingInformation.BuildingId;
-            data.BuildingLocation = buildingInformation.BuildingDimensions.Centroid;
+            BuildingStats.AddOrUpdate(buildingInformation.BuildingDimensions.Centroid , 1, (key, oldValue) => oldValue + 1);
 
-            BuildingStats.AddOrUpdate(data.BuildingLocation, 1, (key, oldValue) => oldValue + 1);
-
-            StartCoroutine(ClearHighlight(highlight));
-
-
-            
+            //StartCoroutine(ClearHighlight(highlight));
 
         }
 
@@ -142,7 +117,7 @@ namespace CustomBuilding.Procesing
         }
 
 
-        IEnumerator ClearHighlight(BuildingHighlight highlight)
+        IEnumerator ClearHighlight(BuildingHighlight highlight)   //clears highlights
         {
           
             yield return new WaitForSeconds(HighlightOnScreenTime);
@@ -150,6 +125,18 @@ namespace CustomBuilding.Procesing
             Debug.Log("ClearHighlighs: ");
             highlight.Discard();
         }
+
+        /*public bool IsProcessingDone()
+        {
+            if (TotalBuildingsFound == TotalBuildingsInformationReceived)
+          
+                return true;
+            else
+            {
+                Debug.Log("TotalBuildingsFound: " + TotalBuildingsFound + "     TotalBuildingsInformationReceived: " + TotalBuildingsInformationReceived);
+            }
+                return false;
+        }*/
 
 
     }

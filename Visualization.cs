@@ -12,6 +12,8 @@ public class Visualization : MonoBehaviour
    
     public void FindOptimalBuildings(ConcurrentDictionary<LatLong, int> BuildingStats)
     {
+        Debug.Log("Count: " + BuildingStats.Count);
+
         var BuildingsArray = BuildingStats.ToArray();
         BuildingsList = new List<KeyValuePair<LatLong, int>>(BuildingsArray);
 
